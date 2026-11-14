@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Virtual environments
+backend/myvenv/
+myvenv/
+venv/
+.venv/
+
+# Node
+node_modules/
+frontend/node_modules/
+
+# Build files
+frontend/dist/
+
+# Environment variables
+.env
+
+# ChromaDB
+chroma_db/
+
+# OS
+.DS_Store
+Thumbs.db
+
+*.pdf
+
+backup-repo.git/

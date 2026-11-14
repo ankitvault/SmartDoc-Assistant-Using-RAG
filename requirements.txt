@@ -1,0 +1,36 @@
+# Backend Python requirements
+bcrypt==5.0.0
+chromadb==1.5.4
+cloudinary==1.44.1
+email-validator==2.3.0
+fastapi==0.135.2
+langchain-core==1.2.17
+langchain-groq>=1.0.0
+langchain-mistralai==1.1.1
+pydantic==2.12.5
+PyJWT==2.12.1
+pymongo[srv]==4.16.0
+pypdf==6.7.5
+python-dotenv==1.2.2
+python-multipart==0.0.22
+uvicorn[standard]==0.41.0
+
+# Frontend requirements are managed by npm in frontend/package.json.
+# Install them with:
+#   cd frontend
+#   npm install
+#
+# Runtime dependencies:
+#   axios@^1.14.0
+#   lucide-react@^0.542.0
+#   react@^18.3.1
+#   react-dom@^18.3.1
+#   react-markdown@^9.1.0
+#   react-router-dom@^7.13.2
+#
+# Development dependencies:
+#   @vitejs/plugin-react@^6.0.2
+#   autoprefixer@^10.4.21
+#   postcss@^8.5.6
+#   tailwindcss@^3.4.17
+#   vite@^8.0.16
