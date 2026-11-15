@@ -23,6 +23,12 @@ SMTP_USERNAME = os.getenv("SMTP_USERNAME")
 SMTP_PASSWORD = os.getenv("SMTP_PASSWORD")
 SENDER_EMAIL = os.getenv("SENDER_EMAIL")
 
+# HTTP-based Email APIs (recommended for cloud hosts like Render free tier that block outbound SMTP ports)
+RESEND_API_KEY = os.getenv("RESEND_API_KEY")
+RESEND_FROM_EMAIL = os.getenv("RESEND_FROM_EMAIL", "SmartDOC Assistant <onboarding@resend.dev>")
+BREVO_API_KEY = os.getenv("BREVO_API_KEY")
+ALLOW_LOG_OTP_FALLBACK = os.getenv("ALLOW_LOG_OTP_FALLBACK", "true").lower() == "true"
+
 # OTP Configuration
 OTP_EXPIRATION_MINUTES = int(os.getenv("OTP_EXPIRATION_MINUTES", "10"))
 

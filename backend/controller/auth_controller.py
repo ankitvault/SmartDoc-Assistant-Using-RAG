@@ -160,11 +160,14 @@ def send_otp_logic(email: str) -> dict:
     
     try:
         result = send_otp_email(email)
-        return {
+        response_data = {
             "message": result["message"],
             "email": email,
-            "expires_in": result["expiration_minutes"] * 60
+            "expires_in": result["expiration_minutes"] * 60,
         }
+        if "dev_otp" in result:
+            response_data["dev_otp"] = result["dev_otp"]
+        return response_data
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to send OTP: {str(e)}")
 
@@ -230,11 +233,14 @@ def send_forgot_password_otp_logic(email: str) -> dict:
 
     try:
         result = send_otp_email(email)
-        return {
+        response_data = {
             "message": result["message"],
             "email": email,
             "expires_in": result["expiration_minutes"] * 60,
         }
+        if "dev_otp" in result:
+            response_data["dev_otp"] = result["dev_otp"]
+        return response_data
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to send OTP: {str(e)}")
 

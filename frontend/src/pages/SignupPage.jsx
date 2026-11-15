@@ -56,6 +56,7 @@ export default function SignupPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [devOtpHint, setDevOtpHint] = useState("");
   const [step, setStep] = useState("initial"); // "initial" -> "otp" -> "success"
   const [otpSent, setOtpSent] = useState(false);
   const navigate = useNavigate();
@@ -85,7 +86,11 @@ export default function SignupPage() {
 
     try {
       // Send OTP to email
-      await authAPI.sendOTP(formData.workEmail);
+      const result = await authAPI.sendOTP(formData.workEmail);
+      if (result && result.dev_otp) {
+        setDevOtpHint(result.dev_otp);
+        setFormData((prev) => ({ ...prev, otp: result.dev_otp }));
+      }
       setOtpSent(true);
       setStep("otp");
     } catch (err) {
@@ -260,6 +265,15 @@ export default function SignupPage() {
 
         {step === "otp" && (
           <>
+            {devOtpHint && (
+              <div className="rounded-lg border border-indigo-200 bg-indigo-50/80 p-3.5 text-xs text-indigo-900">
+                <p className="font-semibold text-indigo-950 mb-1">Render Free Tier SMTP Fallback:</p>
+                <p>
+                  Outbound SMTP is blocked on Render free tier. Your code was retrieved from server logs and prefilled: <strong className="font-mono text-sm font-bold text-indigo-600">{devOtpHint}</strong>
+                </p>
+              </div>
+            )}
+
             <AuthInput
               id="otp"
               label="Verification Code"
