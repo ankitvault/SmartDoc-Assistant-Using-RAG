@@ -1,5 +1,5 @@
 ---
-title: DocMind
+title: SmartDOC Assistant
 emoji: 🌖
 colorFrom: blue
 colorTo: purple

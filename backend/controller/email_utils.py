@@ -71,7 +71,7 @@ def send_otp_email(email: str) -> dict:
             <body style="font-family: Arial, sans-serif;">
                 <div style="background-color: #f5f5f5; padding: 20px; border-radius: 5px;">
                     <h2 style="color: #333;">Email Verification Required</h2>
-                    <p>Welcome to DocMind! Please verify your email by entering the OTP below:</p>
+                    <p>Welcome to SmartDOC Assistant! Please verify your email by entering the OTP below:</p>
                     
                     <div style="background-color: #fff; padding: 20px; border-radius: 5px; text-align: center; margin: 20px 0;">
                         <p style="font-size: 32px; font-weight: bold; color: #007bff; letter-spacing: 5px;">

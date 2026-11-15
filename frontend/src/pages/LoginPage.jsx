@@ -76,7 +76,7 @@ export default function LoginPage() {
           Enterprise Secure Access
         </p>
         <h1 className="text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">
-          Welcome back to DocMind AI
+          Welcome back to SmartDOC Assistant
         </h1>
         <p className="max-w-lg text-sm text-slate-500 sm:text-base">
           Sign in to continue managing secure, multi-tenant knowledge automation
@@ -168,7 +168,7 @@ export default function LoginPage() {
 
       {/* Toggle */}
       <p className="text-sm text-slate-500">
-        New to DocMind AI?{" "}
+        New to SmartDOC Assistant?{" "}
         <Link
           to="/signup"
           className="font-semibold text-indigo-600 transition hover:text-indigo-500"

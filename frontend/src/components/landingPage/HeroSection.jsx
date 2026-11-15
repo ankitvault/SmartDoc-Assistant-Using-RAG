@@ -46,7 +46,7 @@ function HeroSection() {
                     <BotMessageSquare className="h-4 w-4" />
                   </div>
                   <h3 className="text-sm font-semibold text-slate-200">
-                    DocMind Enterprise Assistant
+                    SmartDOC Assistant
                   </h3>
                 </div>
                 <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/20 px-3 py-1 text-xs font-semibold text-emerald-300">

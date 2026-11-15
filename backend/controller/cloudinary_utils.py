@@ -48,7 +48,7 @@ def upload_profile_image(file) -> str:
         # Upload to Cloudinary
         result = cloudinary.uploader.upload(
             file_content,
-            folder="docmind/profiles",
+            folder="smartdoc/profiles",
             resource_type="image",
             quality="auto",
             fetch_format="auto",
@@ -89,7 +89,7 @@ def upload_document(file) -> str:
         # Upload to Cloudinary
         result = cloudinary.uploader.upload(
             file_content,
-            folder="docmind/documents",
+            folder="smartdoc/documents",
             resource_type="raw",
             public_id=file.filename.split('.')[0],
         )

@@ -1,3 +1,4 @@
+import certifi
 from pymongo import MongoClient
 try:
     from backend.config import MONGO_URI
@@ -11,7 +12,11 @@ try:
             "or set it in the container environment."
         )
 
-    client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=5000)
+    client = MongoClient(
+        MONGO_URI,
+        tlsCAFile=certifi.where(),
+        serverSelectionTimeoutMS=5000,
+    )
     db = client["DocMindCluster"]
 
     users_collection = db["users"]  

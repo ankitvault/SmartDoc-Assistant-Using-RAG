@@ -1,4 +1,4 @@
-"""Groq chat and Mistral embedding service helpers."""
+"""Groq chat and Voyage AI embedding service helpers."""
 
 from __future__ import annotations
 
@@ -8,13 +8,16 @@ from typing import Any
 from fastapi import HTTPException
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_groq import ChatGroq
-from langchain_mistralai import MistralAIEmbeddings
+from langchain_voyageai import VoyageAIEmbeddings
+import voyageai
 from pydantic import SecretStr
 
 try:
     from backend.config import (
         GROQ_API_KEY,
         GROQ_CHAT_MODEL,
+        VOYAGEAI_API_KEY,
+        VOYAGEAI_EMBEDDING_MODEL,
         MISTRAL_API_KEY,
         MISTRAL_EMBEDDING_MODEL,
         RAG_MAX_OUTPUT_TOKENS,
@@ -23,6 +26,8 @@ except ModuleNotFoundError:
     from config import (
         GROQ_API_KEY,
         GROQ_CHAT_MODEL,
+        VOYAGEAI_API_KEY,
+        VOYAGEAI_EMBEDDING_MODEL,
         MISTRAL_API_KEY,
         MISTRAL_EMBEDDING_MODEL,
         RAG_MAX_OUTPUT_TOKENS,
@@ -32,10 +37,11 @@ except ModuleNotFoundError:
 FALLBACK_RESPONSE = "I don't know based on the uploaded PDF."
 
 
-def _require_mistral_key() -> SecretStr:
-    if not MISTRAL_API_KEY:
-        raise HTTPException(status_code=500, detail="MISTRAL_API_KEY is not configured")
-    return SecretStr(MISTRAL_API_KEY)
+def _require_embedding_key() -> SecretStr:
+    key = VOYAGEAI_API_KEY or MISTRAL_API_KEY
+    if not key:
+        raise HTTPException(status_code=500, detail="VOYAGEAI_API_KEY is not configured")
+    return SecretStr(key)
 
 
 def _require_groq_key() -> SecretStr:
@@ -45,10 +51,16 @@ def _require_groq_key() -> SecretStr:
 
 
 @lru_cache(maxsize=1)
-def get_embeddings_model() -> MistralAIEmbeddings:
-    return MistralAIEmbeddings(
-        api_key=_require_mistral_key(),
-        model=MISTRAL_EMBEDDING_MODEL,
+def get_voyage_client() -> voyageai.Client:
+    key = _require_embedding_key()
+    return voyageai.Client(api_key=key.get_secret_value())
+
+
+@lru_cache(maxsize=1)
+def get_embeddings_model() -> VoyageAIEmbeddings:
+    return VoyageAIEmbeddings(
+        voyage_api_key=_require_embedding_key(),
+        model=VOYAGEAI_EMBEDDING_MODEL,
     )
 
 
@@ -65,11 +77,29 @@ def get_chat_model() -> ChatGroq:
 def embed_documents(texts: list[str]) -> list[list[float]]:
     if not texts:
         return []
-    return get_embeddings_model().embed_documents(texts)
+    try:
+        client = get_voyage_client()
+        res = client.embed(texts, model=VOYAGEAI_EMBEDDING_MODEL, input_type="document")
+        return res.embeddings
+    except Exception as exc:
+        try:
+            return get_embeddings_model().embed_documents(texts)
+        except Exception:
+            raise HTTPException(status_code=502, detail=f"Voyage AI embedding failed: {str(exc)}")
 
 
 def embed_query(text: str) -> list[float]:
-    return get_embeddings_model().embed_query(text)
+    if not text:
+        return []
+    try:
+        client = get_voyage_client()
+        res = client.embed([text], model=VOYAGEAI_EMBEDDING_MODEL, input_type="query")
+        return res.embeddings[0]
+    except Exception as exc:
+        try:
+            return get_embeddings_model().embed_query(text)
+        except Exception:
+            raise HTTPException(status_code=502, detail=f"Voyage AI query embedding failed: {str(exc)}")
 
 
 def _extract_response_text(content: Any) -> str:

@@ -35,7 +35,7 @@ jobs:
           git add .
 
           # Create fresh commit
-          git commit -m "Deploy DocMind to Hugging Face"
+          git commit -m "Deploy SmartDOC Assistant to Hugging Face"
 
           # Add Hugging Face remote
           git remote add hf https://user:${HF_TOKEN}@huggingface.co/spaces/rishabh1170/DocMind

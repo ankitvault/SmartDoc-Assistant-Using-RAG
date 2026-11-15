@@ -17,7 +17,7 @@ except ModuleNotFoundError:
     from routes import user, auth, document, chat
     from config import CORS_ALLOW_ORIGINS, CORS_ALLOW_CREDENTIALS
 
-app = FastAPI(title="Enterprise Knowledge Automation API", version="1.0.0")
+app = FastAPI(title="SmartDOC Assistant API", version="1.0.0")
 FRONTEND_DIST_DIR = Path(__file__).resolve().parents[1] / "frontend" / "dist"
 
 # Enable CORS for local frontend apps (Vite/React).
