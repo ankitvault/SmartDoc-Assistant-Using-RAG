@@ -16,6 +16,9 @@ export const API_BASE_URL = rawBaseUrl;
 export const APIS = {
   // Authentication routes (/auth)
   AUTH: {
+    // POST /auth/signup (Direct signup without OTP)
+    SIGNUP: "/auth/signup",
+
     // POST /auth/send-otp
     SEND_OTP: "/auth/send-otp",
 

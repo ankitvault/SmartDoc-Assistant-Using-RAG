@@ -38,12 +38,12 @@ class LoginRequest(BaseModel):
 
 
 class SignupRequest(BaseModel):
-    """Request body for signup endpoint with mandatory OTP verification."""
+    """Request body for direct signup endpoint."""
     email: EmailStr
-    otp: str
     name: str
     password: str
     role: str
+    otp: str = None
     profile_url: str = None
     company_id: str = None
 
@@ -51,10 +51,10 @@ class SignupRequest(BaseModel):
 @router.post("/signup", status_code=status.HTTP_201_CREATED)
 def signup(payload: SignupRequest):
     """
-    Register a new user only after OTP verification.
+    Register a new user directly without OTP verification.
 
     Args:
-        payload: Signup payload including OTP
+        payload: Signup payload
 
     Returns:
         Auth response with access token and user details
@@ -67,7 +67,7 @@ def signup(payload: SignupRequest):
         profile_url=payload.profile_url,
         company_id=payload.company_id,
     )
-    return verify_otp_and_signup_logic(payload.email, payload.otp, user_create)
+    return signup_logic(user_create)
 
 
 @router.post("/login")

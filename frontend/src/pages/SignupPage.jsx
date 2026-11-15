@@ -18,7 +18,6 @@ const initialForm = {
   workEmail: "",
   password: "",
   role: "employee",
-  otp: "",
 };
 
 function validatePasswordStrength(password) {
@@ -55,10 +54,8 @@ export default function SignupPage() {
   const [formData, setFormData] = useState(initialForm);
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState("");
-  const [devOtpHint, setDevOtpHint] = useState("");
-  const [step, setStep] = useState("initial"); // "initial" -> "otp" -> "success"
-  const [otpSent, setOtpSent] = useState(false);
   const navigate = useNavigate();
   const { login } = useAuth();
 
@@ -72,7 +69,7 @@ export default function SignupPage() {
     setShowPassword((value) => !value);
   };
 
-  const handleSendOTP = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
     setError("");
@@ -85,45 +82,9 @@ export default function SignupPage() {
     }
 
     try {
-      // Send OTP to email
-      const result = await authAPI.sendOTP(formData.workEmail);
-      if (result && result.dev_otp) {
-        setDevOtpHint(result.dev_otp);
-        setFormData((prev) => ({ ...prev, otp: result.dev_otp }));
-      }
-      setOtpSent(true);
-      setStep("otp");
-    } catch (err) {
-      setError(err.message || "Failed to send OTP. Please try again.");
-      console.error("Send OTP error:", err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleVerifyOTPAndSignup = async (e) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError("");
-
-    const passwordError = validatePasswordStrength(formData.password);
-    if (passwordError) {
-      setIsLoading(false);
-      setError(passwordError);
-      return;
-    }
-
-    if (formData.otp.trim().length === 0) {
-      setIsLoading(false);
-      setError("Verification code is required.");
-      return;
-    }
-
-    try {
-      // Verify OTP and complete signup
-      const response = await authAPI.verifyOTPAndSignup(
+      // Direct signup without OTP
+      const response = await authAPI.signup(
         formData.workEmail.trim(),
-        formData.otp.trim(),
         formData.fullName.trim(),
         formData.password,
         formData.role,
@@ -135,11 +96,11 @@ export default function SignupPage() {
       // Update AuthContext state
       login(response);
 
-      setStep("success");
+      setIsSuccess(true);
       // Redirect to dashboard after short delay
       setTimeout(() => {
         navigate("/dashboard");
-      }, 1200);
+      }, 1000);
     } catch (err) {
       setError(err.message || "Signup failed. Please try again.");
       console.error("Signup error:", err);
@@ -157,155 +118,83 @@ export default function SignupPage() {
           Enterprise Secure Access
         </p>
         <h1 className="text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">
-          {step === "initial" && "Create your SmartDOC Assistant workspace"}
-          {step === "otp" && "Verify your email"}
-          {step === "success" && "Welcome to SmartDOC Assistant"}
+          Create your SmartDOC Assistant workspace
         </h1>
         <p className="max-w-lg text-sm text-slate-500 sm:text-base">
-          {step === "initial" &&
-            "Provision your tenant, centralize private knowledge, and automate retrieval across teams."}
-          {step === "otp" &&
-            `We've sent a verification code to ${formData.workEmail}`}
-          {step === "success" &&
-            "Your account has been created successfully. Redirecting to your workspace..."}
+          Provision your tenant, centralize private knowledge, and automate retrieval across teams.
         </p>
       </div>
 
       {/* Form */}
-      <form
-        onSubmit={step === "initial" ? handleSendOTP : handleVerifyOTPAndSignup}
-        className="space-y-5"
-      >
-        {step === "initial" && (
-          <>
-            <AuthInput
-              id="fullName"
-              label="Full Name"
-              value={formData.fullName}
-              onChange={handleChange}
-              placeholder="Akshay kumar"
-              autoComplete="name"
-              required
-            />
+      <form onSubmit={handleSubmit} className="space-y-5">
+        <AuthInput
+          id="fullName"
+          label="Full Name"
+          value={formData.fullName}
+          onChange={handleChange}
+          placeholder="Ankit Kumar"
+          autoComplete="name"
+          required
+        />
 
-            <AuthInput
-              id="workEmail"
-              label="Work Email"
-              type="email"
-              value={formData.workEmail}
-              onChange={handleChange}
-              placeholder="you@company.com"
-              autoComplete="email"
-              required
-            />
+        <AuthInput
+          id="workEmail"
+          label="Work Email"
+          type="email"
+          value={formData.workEmail}
+          onChange={handleChange}
+          placeholder="you@company.com"
+          autoComplete="email"
+          required
+        />
 
-            <AuthInput
-              id="password"
-              label="Password"
-              type={showPassword ? "text" : "password"}
-              value={formData.password}
-              onChange={handleChange}
-              placeholder="••••••••"
-              autoComplete="new-password"
-              required
-              trailingAction={
-                <button
-                  type="button"
-                  onClick={togglePasswordVisibility}
-                  className="inline-flex items-center justify-center text-slate-500 transition hover:text-slate-700"
-                  aria-label={showPassword ? "Hide password" : "Show password"}
-                >
-                  {showPassword ? (
-                    <EyeOff className="h-4 w-4" />
-                  ) : (
-                    <Eye className="h-4 w-4" />
-                  )}
-                </button>
-              }
-            />
-
-            <p className="-mt-2 text-xs leading-5 text-slate-500">
-              Use at least 8 characters with uppercase, lowercase, number, and
-              special character. Spaces are not allowed.
-            </p>
-
-            <div className="space-y-2">
-              <label
-                htmlFor="role"
-                className="text-sm font-medium text-slate-500"
-              >
-                Account Role
-              </label>
-              <select
-                id="role"
-                name="role"
-                value={formData.role}
-                onChange={handleChange}
-                className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30"
-              >
-                <option value="employee">Employee</option>
-                <option value="admin">Admin</option>
-              </select>
-            </div>
-
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-70"
-            >
-              {isLoading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <ArrowRight className="h-4 w-4" />
-              )}
-              {isLoading ? "Sending OTP..." : "Continue"}
-            </button>
-          </>
-        )}
-
-        {step === "otp" && (
-          <>
-            {devOtpHint && (
-              <div className="rounded-lg border border-indigo-200 bg-indigo-50/80 p-3.5 text-xs text-indigo-900">
-                <p className="font-semibold text-indigo-950 mb-1">Render Free Tier SMTP Fallback:</p>
-                <p>
-                  Outbound SMTP is blocked on Render free tier. Your code was retrieved from server logs and prefilled: <strong className="font-mono text-sm font-bold text-indigo-600">{devOtpHint}</strong>
-                </p>
-              </div>
-            )}
-
-            <AuthInput
-              id="otp"
-              label="Verification Code"
-              value={formData.otp}
-              onChange={handleChange}
-              placeholder="000000"
-              maxLength="6"
-              required
-            />
-
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-70"
-            >
-              {isLoading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <ArrowRight className="h-4 w-4" />
-              )}
-              {isLoading ? "Verifying..." : "Create Workspace"}
-            </button>
-
+        <AuthInput
+          id="password"
+          label="Password"
+          type={showPassword ? "text" : "password"}
+          value={formData.password}
+          onChange={handleChange}
+          placeholder="••••••••"
+          autoComplete="new-password"
+          required
+          trailingAction={
             <button
               type="button"
-              onClick={() => setStep("initial")}
-              className="w-full text-center text-sm font-medium text-indigo-600 transition hover:text-indigo-500"
+              onClick={togglePasswordVisibility}
+              className="inline-flex items-center justify-center text-slate-500 transition hover:text-slate-700"
+              aria-label={showPassword ? "Hide password" : "Show password"}
             >
-              Back
+              {showPassword ? (
+                <EyeOff className="h-4 w-4" />
+              ) : (
+                <Eye className="h-4 w-4" />
+              )}
             </button>
-          </>
-        )}
+          }
+        />
+
+        <p className="-mt-2 text-xs leading-5 text-slate-500">
+          Use at least 8 characters with uppercase, lowercase, number, and special character. Spaces are not allowed.
+        </p>
+
+        <div className="space-y-2">
+          <label
+            htmlFor="role"
+            className="text-sm font-medium text-slate-500"
+          >
+            Account Role
+          </label>
+          <select
+            id="role"
+            name="role"
+            value={formData.role}
+            onChange={handleChange}
+            className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30"
+          >
+            <option value="employee">Employee</option>
+            <option value="admin">Admin</option>
+          </select>
+        </div>
 
         {error && (
           <p className="inline-flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700">
@@ -314,25 +203,36 @@ export default function SignupPage() {
           </p>
         )}
 
-        {step === "success" && (
+        {isSuccess && (
           <p className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-700">
-            Your workspace is ready! Redirecting...
+            Your account is created! Redirecting to workspace...
           </p>
         )}
+
+        <button
+          type="submit"
+          disabled={isLoading || isSuccess}
+          className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-70"
+        >
+          {isLoading ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <ArrowRight className="h-4 w-4" />
+          )}
+          {isLoading ? "Creating account..." : "Create Workspace"}
+        </button>
       </form>
 
       {/* Toggle */}
-      {step !== "success" && (
-        <p className="text-sm text-slate-500">
-          Already have an account?{" "}
-          <Link
-            to="/login"
-            className="font-semibold text-indigo-600 transition hover:text-indigo-500"
-          >
-            Sign in
-          </Link>
-        </p>
-      )}
+      <p className="text-sm text-slate-500">
+        Already have an account?{" "}
+        <Link
+          to="/login"
+          className="font-semibold text-indigo-600 transition hover:text-indigo-500"
+        >
+          Sign in
+        </Link>
+      </p>
     </AuthLayout>
   );
 }

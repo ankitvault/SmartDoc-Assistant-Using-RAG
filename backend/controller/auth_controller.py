@@ -174,43 +174,9 @@ def send_otp_logic(email: str) -> dict:
 
 def verify_otp_and_signup_logic(email: str, otp: str, payload: UserCreate) -> dict:
     """
-    Verify OTP and complete user signup.
-    
-    Args:
-        email: Email to verify
-        otp: OTP code
-        payload: User creation data
-        
-    Returns:
-        Auth response with JWT and user details
-        
-    Raises:
-        HTTPException: If OTP invalid, expired, or signup fails
+    Register user directly (OTP bypassed).
     """
-    # First verify the OTP
-    try:
-        verify_otp(email, otp)
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
-    
-    # Email verified, now create user
-    # Check if email was already registered in the meantime
-    existing_user = users_collection.find_one({"email": email})
-    if existing_user:
-        raise HTTPException(status_code=409, detail="Email already registered")
-    
-    # Validate email matches
-    if payload.email != email:
-        raise HTTPException(status_code=400, detail="Email mismatch")
-    
-    # Create user
-    created = payload.model_dump(mode="json", exclude={"password"})
-    created["password_hash"] = hash_password(payload.password)
-    
-    result = users_collection.insert_one(created)
-    created["_id"] = str(result.inserted_id)
-    
-    return _build_auth_response(created, "Signup successful.")
+    return signup_logic(payload)
 
 
 def send_forgot_password_otp_logic(email: str) -> dict:

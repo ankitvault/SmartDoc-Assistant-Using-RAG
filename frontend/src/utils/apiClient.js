@@ -156,6 +156,27 @@ const fetchMultipartWithAuth = async (endpoint, formData, options = {}) => {
 
 export const authAPI = {
   /**
+   * Direct signup without OTP
+   */
+  signup: (email, name, password, role, profileUrl) => {
+    const payload = {
+      email: String(email || "").trim(),
+      name: String(name || "").trim(),
+      password,
+      role,
+    };
+
+    if (typeof profileUrl === "string" && profileUrl.trim()) {
+      payload.profile_url = profileUrl.trim();
+    }
+
+    return fetchWithAuth(APIS.AUTH.SIGNUP, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  },
+
+  /**
    * Send OTP to email for signup verification
    */
   sendOTP: (email) =>
