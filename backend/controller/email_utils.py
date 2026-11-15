@@ -192,6 +192,7 @@ def send_otp_email(email: str) -> dict:
     </html>
     """
 
+    resend_err_msg = None
     # 1. Try Resend HTTP API if configured
     if RESEND_API_KEY:
         try:
@@ -201,7 +202,8 @@ def send_otp_email(email: str) -> dict:
                 "expiration_minutes": OTP_EXPIRATION_MINUTES,
             }
         except Exception as e:
-            logger.warning(f"Resend delivery failed, trying other channels: {e}")
+            resend_err_msg = str(e)
+            logger.warning(f"Resend delivery failed: {e}")
 
     # 2. Try Brevo HTTP API if configured
     if BREVO_API_KEY:
@@ -225,27 +227,28 @@ def send_otp_email(email: str) -> dict:
         err_str = str(smtp_err)
         logger.warning(f"SMTP delivery failed: {err_str}")
 
-        # Check if failure is due to blocked outbound ports (Render Free Tier blocks 25, 465, 587)
+        # Check if failure is due to blocked outbound ports (Render Free Tier blocks 25, 465, 587) or Resend limitation
         is_port_blocked = any(
             hint in err_str.lower()
-            for hint in ["network is unreachable", "errno 101", "timed out", "connection refused", "timeout"]
+            for hint in ["network is unreachable", "errno 101", "timed out", "connection refused", "timeout", "not configured"]
         )
 
-        if is_port_blocked and ALLOW_LOG_OTP_FALLBACK:
+        if (is_port_blocked or resend_err_msg) and ALLOW_LOG_OTP_FALLBACK:
             # Print clearly to Render stdout so it appears in Render dashboard logs
             banner = f"""
 ================================================================================
-⚠️ [RENDER FREE TIER NOTICE]: Outbound SMTP port {SMTP_PORT} is blocked by Render firewall.
+⚠️ [EMAIL DELIVERY NOTICE]:
+   SMTP Error: {err_str}
+   {f'Resend Notice: {resend_err_msg}' if resend_err_msg else ''}
 🔑 [VERIFICATION OTP FOR {email}]: {otp}
 💡 Valid for {OTP_EXPIRATION_MINUTES} minutes.
-💡 Tip: Add RESEND_API_KEY to your Render Environment Variables for live inbox delivery.
 ================================================================================
 """
             print(banner, file=sys.stdout, flush=True)
             logger.info(banner)
 
             return {
-                "message": f"Verification code generated! (Host blocks SMTP port {SMTP_PORT}; check server logs)",
+                "message": f"Verification code generated! Code: {otp}",
                 "expiration_minutes": OTP_EXPIRATION_MINUTES,
                 "dev_otp": otp,
             }
