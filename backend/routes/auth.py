@@ -8,6 +8,7 @@ from pydantic import BaseModel, EmailStr, Field, field_validator
 
 try:
     from backend.controller.auth_controller import (
+        signup_logic,
         login_logic,
         send_otp_logic,
         verify_otp_and_signup_logic,
@@ -18,6 +19,7 @@ try:
     from backend.models.otp_schema import OTPCreate
 except ModuleNotFoundError:
     from controller.auth_controller import (
+        signup_logic,
         login_logic,
         send_otp_logic,
         verify_otp_and_signup_logic,
