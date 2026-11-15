@@ -1,5 +1,17 @@
-export const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000/api";
+let rawBaseUrl =
+  import.meta.env.VITE_API_BASE_URL ||
+  import.meta.env.VITE_API_URL ||
+  "http://127.0.0.1:8000/api";
+
+rawBaseUrl = rawBaseUrl.trim();
+if (rawBaseUrl.endsWith("/")) {
+  rawBaseUrl = rawBaseUrl.slice(0, -1);
+}
+if (!rawBaseUrl.endsWith("/api")) {
+  rawBaseUrl = `${rawBaseUrl}/api`;
+}
+
+export const API_BASE_URL = rawBaseUrl;
 
 export const APIS = {
   // Authentication routes (/auth)

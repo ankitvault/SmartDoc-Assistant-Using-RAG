@@ -20,10 +20,11 @@ except ModuleNotFoundError:
 app = FastAPI(title="SmartDOC Assistant API", version="1.0.0")
 FRONTEND_DIST_DIR = Path(__file__).resolve().parents[1] / "frontend" / "dist"
 
-# Enable CORS for local frontend apps (Vite/React).
+# Enable CORS for local and hosted frontend apps (Vite/React, Vercel deployments).
 app.add_middleware(
     CORSMiddleware,
     allow_origins=CORS_ALLOW_ORIGINS,
+    allow_origin_regex=r"https://.*\.vercel\.app",
     allow_credentials=CORS_ALLOW_CREDENTIALS,
     allow_methods=["*"],
     allow_headers=["*"],
