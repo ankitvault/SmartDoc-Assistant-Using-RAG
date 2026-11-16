@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from functools import lru_cache
 from typing import Any
 
@@ -11,6 +12,8 @@ from langchain_groq import ChatGroq
 from langchain_voyageai import VoyageAIEmbeddings
 import voyageai
 from pydantic import SecretStr
+
+logger = logging.getLogger(__name__)
 
 try:
     from backend.config import (
@@ -64,11 +67,12 @@ def get_embeddings_model() -> VoyageAIEmbeddings:
     )
 
 
-@lru_cache(maxsize=1)
-def get_chat_model() -> ChatGroq:
+@lru_cache(maxsize=4)
+def get_chat_model(model_name: str | None = None) -> ChatGroq:
+    selected_model = model_name or GROQ_CHAT_MODEL or "qwen/qwen3.8-27b"
     return ChatGroq(
         groq_api_key=_require_groq_key(),
-        model=GROQ_CHAT_MODEL,
+        model=selected_model,
         temperature=0.0,
         max_tokens=RAG_MAX_OUTPUT_TOKENS,
     )
@@ -149,10 +153,30 @@ def generate_grounded_answer(question: str, context_chunks: list[dict]) -> str:
         SystemMessage(content=system_prompt),
         HumanMessage(content=user_prompt),
     ]
-    try:
-        response = get_chat_model().invoke(messages)
-    except Exception as exc:
-        raise HTTPException(status_code=502, detail=f"LLM request failed: {str(exc)}")
+
+    # Model candidates: primary configured model, followed by verified Groq fallbacks
+    models_to_try = [GROQ_CHAT_MODEL or "qwen/qwen3.8-27b"]
+    for fallback in ["qwen/qwen3.8-27b", "openai/gpt-oss-120b", "openai/gpt-oss-20b"]:
+        if fallback not in models_to_try:
+            models_to_try.append(fallback)
+
+    last_error = None
+    response = None
+    for model_name in models_to_try:
+        try:
+            chat_model = get_chat_model(model_name)
+            response = chat_model.invoke(messages)
+            break
+        except Exception as exc:
+            last_error = exc
+            err_msg = str(exc).lower()
+            if any(hint in err_msg for hint in ["model_not_found", "does not exist", "not found", "404", "model_decommissioned"]):
+                logger.warning(f"Groq model '{model_name}' unavailable ({exc}), attempting next fallback...")
+                continue
+            raise HTTPException(status_code=502, detail=f"LLM request failed: {str(exc)}")
+
+    if response is None:
+        raise HTTPException(status_code=502, detail=f"LLM request failed: {str(last_error)}")
 
     answer = _extract_response_text(getattr(response, "content", "")).strip()
     if not answer:
